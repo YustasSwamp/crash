@@ -1,0 +1,18 @@
+Known issues(reported from QE and Tao):
+
+[1] segment fault
+     -fixed
+[2] crash: gdb cannot find text block for address: dd_init_queue
+    -investigating
+    -Could be related to the following commits:
+     3e9a99eba058 ("block/mq-deadline: Rename dd_init_queue() and dd_exit_queue()")
+     b93027ce5c75 ("Add alternate HZ calculation using write_expire")
+[3] dis -l
+    -cannot determine file and line number
+    -it seems to be problematic(x86_64), but do not observe similar issues on ppc64le based on the latest kernel, but reproduce it on an old vmcore by Tao.
+    -Not fix
+[4] related to symbols KASLR
+   -it can be solved by deleting kaslr address recalculating code, but the root cause is still reasoning
+   -Not fix
+[5] Continue to test and improve ...
+

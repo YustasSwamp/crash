@@ -107,6 +107,7 @@ void add_extra_lib(char *);
 #undef MIPS
 #undef SPARC64
 #undef MIPS64
+#undef RISCV64
 
 #define UNKNOWN 0
 #define X86     1
@@ -122,6 +123,7 @@ void add_extra_lib(char *);
 #define MIPS    11
 #define SPARC64 12
 #define MIPS64  13
+#define RISCV64 14
 
 #define TARGET_X86    "TARGET=X86"
 #define TARGET_ALPHA  "TARGET=ALPHA"
@@ -136,6 +138,7 @@ void add_extra_lib(char *);
 #define TARGET_MIPS   "TARGET=MIPS"
 #define TARGET_MIPS64 "TARGET=MIPS64"
 #define TARGET_SPARC64 "TARGET=SPARC64"
+#define TARGET_RISCV64 "TARGET=RISCV64"
 
 #define TARGET_CFLAGS_X86    "TARGET_CFLAGS=-D_FILE_OFFSET_BITS=64"
 #define TARGET_CFLAGS_ALPHA  "TARGET_CFLAGS="
@@ -158,6 +161,7 @@ void add_extra_lib(char *);
 #define TARGET_CFLAGS_MIPS_ON_X86_64  "TARGET_CFLAGS=-m32 -D_FILE_OFFSET_BITS=64"
 #define TARGET_CFLAGS_MIPS64          "TARGET_CFLAGS="
 #define TARGET_CFLAGS_SPARC64         "TARGET_CFLAGS="
+#define TARGET_CFLAGS_RISCV64         "TARGET_CFLAGS="
 
 #define GDB_TARGET_DEFAULT        "GDB_CONF_FLAGS="
 #define GDB_TARGET_ARM_ON_X86     "GDB_CONF_FLAGS=--target=arm-elf-linux"
@@ -404,6 +408,9 @@ get_current_configuration(struct supported_gdb_version *sp)
 #ifdef __sparc_v9__
 	target_data.target = SPARC64;
 #endif
+#if defined (__riscv) && __riscv_xlen == 64
+	target_data.target = RISCV64;
+#endif
 
 	set_initial_target(sp);
 
@@ -544,6 +551,10 @@ get_current_configuration(struct supported_gdb_version *sp)
 		if ((target_data.target == SPARC64) &&
 		    (target_data.initial_gdb_target != SPARC64))
 			arch_mismatch(sp);
+
+		if ((target_data.target == RISCV64) &&
+		    (target_data.initial_gdb_target != RISCV64))
+			arch_mismatch(sp);
 	}
 
         if ((fp = fopen("Makefile", "r")) == NULL) {
@@ -659,6 +670,9 @@ show_configuration(void)
 		break;
 	case SPARC64:
 		printf("TARGET: SPARC64\n");
+		break;
+	case RISCV64:
+		printf("TARGET: RISCV64\n");
 		break;
 	}
 
@@ -776,6 +790,10 @@ build_configure(struct supported_gdb_version *sp)
 	case SPARC64:
 		target = TARGET_SPARC64;
 		target_CFLAGS = TARGET_CFLAGS_SPARC64;
+		break;
+	case RISCV64:
+		target = TARGET_RISCV64;
+		target_CFLAGS = TARGET_CFLAGS_RISCV64;
 		break;
 	}
 
@@ -1374,7 +1392,7 @@ make_spec_file(struct supported_gdb_version *sp)
 	printf("Vendor: Red Hat, Inc.\n");
 	printf("Packager: Dave Anderson <anderson@redhat.com>\n");
 	printf("ExclusiveOS: Linux\n");
-	printf("ExclusiveArch: %%{ix86} alpha ia64 ppc ppc64 ppc64pseries ppc64iseries x86_64 s390 s390x arm aarch64 ppc64le mips mipsel mips64el sparc64\n");
+	printf("ExclusiveArch: %%{ix86} alpha ia64 ppc ppc64 ppc64pseries ppc64iseries x86_64 s390 s390x arm aarch64 ppc64le mips mipsel mips64el sparc64 riscv64\n");
 	printf("Buildroot: %%{_tmppath}/%%{name}-root\n");
 	printf("BuildRequires: ncurses-devel zlib-devel bison\n");
 	printf("Requires: binutils\n");
@@ -1613,6 +1631,8 @@ set_initial_target(struct supported_gdb_version *sp)
 		target_data.initial_gdb_target = MIPS;
 	else if (strncmp(buf, "SPARC64", strlen("SPARC64")) == 0)
 		target_data.initial_gdb_target = SPARC64;
+	else if (strncmp(buf, "RISCV64", strlen("RISCV64")) == 0)
+		target_data.initial_gdb_target = RISCV64;
 }
 
 char *
@@ -1633,6 +1653,7 @@ target_to_name(int target)
 	case MIPS:   return("MIPS");
 	case MIPS64: return("MIPS64");
 	case SPARC64: return("SPARC64");
+	case RISCV64: return("RISCV64");
 	}
 
 	return "UNKNOWN";
@@ -1697,6 +1718,8 @@ name_to_target(char *name)
 		return MIPS64;
 	else if (strncmp(name, "sparc64", strlen("sparc64")) == 0)
 		return SPARC64;
+	else if (strncmp(name, "riscv64", strlen("riscv64")) == 0)
+		return RISCV64;
 
 	return UNKNOWN;
 }
